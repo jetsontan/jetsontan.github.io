@@ -173,6 +173,7 @@ objdump -d libvulkan.so >> libvulkan.asm
     </fieldset>
 	<p>成功!</p>
 	<h2 id="review">一些结果及反思</h2>
+	<h3>llama-cli测试</h3>
 	<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; text-align: center;">
 <thead>
 <tr style="background-color: #f2f2f2;">
@@ -228,8 +229,54 @@ objdump -d libvulkan.so >> libvulkan.asm
 <td>1.6 t/s</td>
 </tr>
 </tbody>
-</table>
+	</table>
 	<p><b>注: 根据进一步测试, CPU后端的prompt速度可以远超GPU后端. 但generation速度则会在多轮对话后被GPU反超(2倍).</b></p>
+	<h3>llama-bench测试</h3>
+    <fieldset style="width: 1000px; overflow: auto; white-space: pre;">
+        <legend>Output</legend>
+        <code>
+~/.../build/bin $ taskset -c 4,5,6,7 ./llama-bench -m 0.5b.gguf -t 4 -ngl 100
+ggml_vulkan: WARNING: Instance extension VK_EXT_debug_utils not found.
+ggml_vulkan: Found 1 Vulkan devices:
+ggml_vulkan: 0 = Mali-G77 MC9 (Mali-G77 MC9) | uma: 1 | fp16: 1 | bf16: 0 | warp size: 16 | shared memory: 32768 | int dot: 0 | matrix cores: none
+| model                          |       size |     params | backend    | ngl | threads |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | ------: | --------------: | -------------------: |
+| qwen2 0.5B Q2_K - Medium       | 278.92 MiB |   619.57 M | Vulkan     | 100 |       4 |           pp512 |         59.72 ± 0.50 |
+| qwen2 0.5B Q2_K - Medium       | 278.92 MiB |   619.57 M | Vulkan     | 100 |       4 |           tg128 |         17.08 ± 0.78 |
+
+build: 1d1d9a9ed (9968)
+~/.../build/bin $ taskset -c 4,5,6,7 ./llama-bench -m 0.5b.gguf -t 4 -ngl 0
+ggml_vulkan: WARNING: Instance extension VK_EXT_debug_utils not found.
+ggml_vulkan: Found 1 Vulkan devices:
+ggml_vulkan: 0 = Mali-G77 MC9 (Mali-G77 MC9) | uma: 1 | fp16: 1 | bf16: 0 | warp size: 16 | shared memory: 32768 | int dot: 0 | matrix cores: none
+| model                          |       size |     params | backend    | ngl | threads |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | ------: | --------------: | -------------------: |
+| qwen2 0.5B Q2_K - Medium       | 278.92 MiB |   619.57 M | Vulkan     |   0 |       4 |           pp512 |         54.44 ± 0.38 |
+| qwen2 0.5B Q2_K - Medium       | 278.92 MiB |   619.57 M | Vulkan     |   0 |       4 |           tg128 |         18.44 ± 3.49 |
+
+build: 1d1d9a9ed (9968)
+~/.../build/bin $ taskset -c 4,5,6,7 ./llama-bench -m 0.5b.gguf -t 4 -ngl 10
+ggml_vulkan: WARNING: Instance extension VK_EXT_debug_utils not found.
+ggml_vulkan: Found 1 Vulkan devices:
+ggml_vulkan: 0 = Mali-G77 MC9 (Mali-G77 MC9) | uma: 1 | fp16: 1 | bf16: 0 | warp size: 16 | shared memory: 32768 | int dot: 0 | matrix cores: none
+| model                          |       size |     params | backend    | ngl | threads |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | ------: | --------------: | -------------------: |
+| qwen2 0.5B Q2_K - Medium       | 278.92 MiB |   619.57 M | Vulkan     |  10 |       4 |           pp512 |         53.55 ± 1.12 |
+| qwen2 0.5B Q2_K - Medium       | 278.92 MiB |   619.57 M | Vulkan     |  10 |       4 |           tg128 |         11.56 ± 0.72 |
+
+build: 1d1d9a9ed (9968)
+~/.../build/bin $ taskset -c 4,5,6,7 ./llama-bench -m 0.5b.gguf -t 4 -ngl 20
+ggml_vulkan: WARNING: Instance extension VK_EXT_debug_utils not found.
+ggml_vulkan: Found 1 Vulkan devices:
+ggml_vulkan: 0 = Mali-G77 MC9 (Mali-G77 MC9) | uma: 1 | fp16: 1 | bf16: 0 | warp size: 16 | shared memory: 32768 | int dot: 0 | matrix cores: none
+| model                          |       size |     params | backend    | ngl | threads |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | ------: | --------------: | -------------------: |
+| qwen2 0.5B Q2_K - Medium       | 278.92 MiB |   619.57 M | Vulkan     |  20 |       4 |           pp512 |         56.07 ± 1.30 |
+| qwen2 0.5B Q2_K - Medium       | 278.92 MiB |   619.57 M | Vulkan     |  20 |       4 |           tg128 |         15.76 ± 0.04 |
+
+build: 1d1d9a9ed (9968)
+		</code>
+    </fieldset>
 	<p>由于I/O瓶颈和兼容操作, GPU性能并未得到充分发挥. 但至少与CPU相差不大. 若在旗舰机上运行, Mali GPU也许能超越CPU. 说实话, ARM最近放出来的新一代GPU "G1 Ultra" 还是很令人期待的.</p>
 	<p>值得一提的是, 用同样的方法修改OpenCL后端并不能成功, 因为没有适配Mali的OpenCL算子.</p>
 	<p>日后将尝试Adreno上的Vulkan/OpenCL后端, 以及MTK的APU和Qualcomm的Hexagon NPU.</p>
