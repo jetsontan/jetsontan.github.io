@@ -278,6 +278,7 @@ build: 1d1d9a9ed (9968)
 		</code>
     </fieldset>
 	<p>由于I/O瓶颈和兼容操作, GPU性能并未得到充分发挥. 但至少与CPU相差不大. 若在旗舰机上运行, Mali GPU也许能超越CPU. 说实话, ARM最近放出来的新一代GPU "G1 Ultra" 还是很令人期待的.</p>
+	<p>我实际上有一个构想, 用mmap划一块RAM给GPU, 让GPU访问以降低I/O瓶颈.</p>
 	<p>值得一提的是, 用同样的方法修改OpenCL后端并不能成功, 因为没有适配Mali的OpenCL算子.</p>
 	<p>日后将尝试Adreno上的Vulkan/OpenCL后端, 以及MTK的APU和Qualcomm的Hexagon NPU.</p>
 	<p><a href="/">回到主页</a></p>
