@@ -229,6 +229,7 @@ objdump -d libvulkan.so >> libvulkan.asm
 </tr>
 </tbody>
 </table>
+	<p><b>注: 根据进一步测试, CPU后端的prompt速度可以远超GPU后端. 但generation速度则会在多轮对话后被GPU反超(2倍).</b></p>
 	<p>由于I/O瓶颈和兼容操作, GPU性能并未得到充分发挥. 但至少与CPU相差不大. 若在旗舰机上运行, Mali GPU也许能超越CPU. 说实话, ARM最近放出来的新一代GPU "G1 Ultra" 还是很令人期待的.</p>
 	<p>值得一提的是, 用同样的方法修改OpenCL后端并不能成功, 因为没有适配Mali的OpenCL算子.</p>
 	<p>日后将尝试Adreno上的Vulkan/OpenCL后端, 以及MTK的APU和Qualcomm的Hexagon NPU.</p>
